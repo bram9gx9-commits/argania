@@ -206,6 +206,21 @@ nav button{font-family:var(--f)}
 <main id="view"></main><nav id="nav"></nav>
 </div>
 <script>
+ // تهيئة إعلانات Adsgram
+const adController = window.Adsgram.init({ blockId: "51168" });
+
+function watchTaskAd() {
+    adController.show()
+        .then((result) => {
+            console.log("Ad watched successfully", result);
+            alert("مبروك! تمت مشاهدة الإعلان بنجاح وتمت إضافة المكافأة.");
+            // هنا يمكنك إضافة كود زيادة النقاط الخاص بك
+        })
+        .catch((err) => {
+            console.log("Ad was closed", err);
+            alert("يجب مشاهدة الإعلان كاملاً للحصول على المكافأة!");
+        });
+}
 /* ===== Telegram ===== */
 const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand();tg.setHeaderColor&&tg.setHeaderColor('#030705');tg.setBackgroundColor&&tg.setBackgroundColor('#030705')}
 const U=(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user)||{id:0,first_name:'Guest',username:'guest'};
