@@ -266,7 +266,7 @@ const hist=Array(30).fill(price);function spark(){const e=document.querySelector
 setInterval(()=>{prev=price;price=Math.max(.001,price*(1+(Math.random()-.48)*.03));hist.push(price);hist.shift();hud();spark()},2000);setInterval(hud,1000);
 
 /* ===== Views ===== */
-const TASKS=[{id:'daily',i:'📅',n:'Daily check-in',r:50},{id:'x',i:'𝕏',n:'Follow on X',r:200,u:LINKS.x},{id:'tg',i:'📢',n:'Join Telegram',r:200,u:LINKS.tg},{id:'ad',i:'📺',n:'Watch Ad',r:500,u:'#',action:'watchTaskAd'}];
+const TASKS=[{id:'daily',i:'📅',n:'Daily check-in',r:50},{id:'x',i:'𝕏',n:'Follow on X',r:200,u:LINKS.x},{id:'tg',i:'📢',n:'Join Telegram',r:200,u:LINKS.tg}];
 const MEME=[{id:'m1',n:'AtlasCat',g:50000,r:18200},{id:'m2',n:'DuneDoge',g:80000,r:41000},{id:'m3',n:'SaharaSol',g:30000,r:9500}];
 const LOGO=(()=>{const f=(a,r)=>{const c=(100+r*Math.cos(a*Math.PI/180)).toFixed(1),d=(100+r*Math.sin(a*Math.PI/180)).toFixed(1);return `<ellipse cx="${c}" cy="${d}" rx="4.4" ry="10" transform="rotate(${a} ${c} ${d})" fill="url(#ag)"/>`};
 const Lf=[120,144,168,192,216].map(a=>f(a,62)).join(''),Rt=[60,36,12,-12,-36].map(a=>f(a,62)).join('');
