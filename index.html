@@ -4,6 +4,7 @@
 <title>ARGANIA ($ARG)</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600&family=Space+Grotesk:wght@500;700&family=Tajawal:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 :root{--a:#00ff80;--g:#d4af37;--bg:#030705}
@@ -209,10 +210,17 @@ const BOT='ArganiaBot'; // TODO: replace with your real bot username
 const LINKS={x:'https://x.com/ArganiaARG',ig:'https://instagram.com/argania.arg.official',tg:'https://t.me/+jdUlm4P-RaM1ODI0'};
 const $=s=>document.querySelector(s);
 
+/* ===== Adsgram ===== */
+// Controller is created once; guarded in case the SDK is blocked / not loaded (e.g. ad-blocker, outside Telegram)
+let adController=null;
+try{if(window.Adsgram)adController=window.Adsgram.init({blockId:"51168"})}catch(e){adController=null}
+const getAd=()=>{if(!adController&&window.Adsgram){try{adController=window.Adsgram.init({blockId:"51168"})}catch(e){}}return adController};
+const AD_R=100,AD_CD=60000,AD_MAX=10; // reward (pts), cooldown (ms), max ads per day
+
 /* ===== Store: single mutation gateway (swap persist() for Supabase RPC later) ===== */
 const KEY='arg_v1_'+U.id,SALT='arg|'+U.id;
 const hash=s=>{let h=5381;for(const c of s)h=(h*33^c.charCodeAt(0))>>>0;return h.toString(36)};
-const def=()=>({pts:0,xp:0,arg:0,ton:0,usdt:0,mt:1,tank:500,energy:500,ts:Date.now(),staked:0,stk:Date.now(),ci:0,done:{},pend:{},backed:{},friends:[],ref:null,
+const def=()=>({pts:0,xp:0,arg:0,ton:0,usdt:0,mt:1,tank:500,energy:500,ts:Date.now(),staked:0,stk:Date.now(),ci:0,done:{},pend:{},backed:{},friends:[],ref:null,adN:0,adD:'',adTs:0,
  set:{snd:1,hap:1,lang:'en',th:'#00ff80'}});
 const Store={s:def(),
  load(){try{const r=JSON.parse(localStorage[KEY]);if(r.h===hash(SALT+JSON.stringify(r.d)))this.s={...def(),...r.d};else{localStorage.removeItem(KEY)}}catch(e){}},
@@ -223,9 +231,9 @@ Store.load();const S=()=>Store.s;
 if(tg&&tg.initDataUnsafe&&tg.initDataUnsafe.start_param){const p=tg.initDataUnsafe.start_param;if(p.startsWith('ref_')&&!S().ref&&p!=='ref_'+U.id){S().ref=p.slice(4);Store.persist()}}
 
 /* ===== i18n ===== */
-const L={en:{home:'Home',tasks:'Tasks',games:'Games',ref:'Invite',meme:'Memepad',wallet:'Wallet',boost:'Boost',set:'Settings',price:'$ARG Price',vault:'Staking Vault',stake:'Stake 100',unstake:'Unstake',claim:'Claim',go:'Go',done:'Done ✓',copy:'Copy link',back:'Back 100',convert:'Convert',dep:'Deposit',wd:'Withdraw',lang:'Language',snd:'Sound Effects',hap:'Haptic Feedback',theme:'Theme Color',reset:'Reset data',level:'Level',friends:'Invited friends',none:'No friends yet'},
-fr:{home:'Accueil',tasks:'Tâches',games:'Jeux',ref:'Inviter',meme:'Memepad',wallet:'Portefeuille',boost:'Boost',set:'Réglages',price:'Prix $ARG',vault:'Coffre de staking',stake:'Staker 100',unstake:'Retirer',claim:'Réclamer',go:'Aller',done:'Fait ✓',copy:'Copier le lien',back:'Soutenir 100',convert:'Convertir',dep:'Dépôt',wd:'Retrait',lang:'Langue',snd:'Effets sonores',hap:'Retour haptique',theme:'Couleur du thème',reset:'Réinitialiser',level:'Niveau',friends:'Amis invités',none:'Aucun ami'},
-ar:{home:'الرئيسية',tasks:'المهام',games:'الألعاب',ref:'دعوة',meme:'ميم باد',wallet:'المحفظة',boost:'تعزيز',set:'الإعدادات',price:'سعر $ARG',vault:'خزنة التخزين',stake:'تخزين 100',unstake:'سحب',claim:'استلام',go:'اذهب',done:'تم ✓',copy:'نسخ الرابط',back:'ادعم 100',convert:'تحويل',dep:'إيداع',wd:'سحب',lang:'اللغة',snd:'المؤثرات الصوتية',hap:'الاهتزاز',theme:'لون السمة',reset:'إعادة ضبط',level:'المستوى',friends:'الأصدقاء المدعوون',none:'لا أصدقاء بعد'}};
+const L={en:{home:'Home',tasks:'Tasks',games:'Games',ref:'Invite',meme:'Memepad',wallet:'Wallet',boost:'Boost',set:'Settings',price:'$ARG Price',vault:'Staking Vault',stake:'Stake 100',unstake:'Unstake',claim:'Claim',go:'Go',done:'Done ✓',copy:'Copy link',back:'Back 100',convert:'Convert',dep:'Deposit',wd:'Withdraw',lang:'Language',snd:'Sound Effects',hap:'Haptic Feedback',theme:'Theme Color',reset:'Reset data',level:'Level',friends:'Invited friends',none:'No friends yet',watch:'Watch',adt:'Watch an ad',adno:'No ad available right now'},
+fr:{home:'Accueil',tasks:'Tâches',games:'Jeux',ref:'Inviter',meme:'Memepad',wallet:'Portefeuille',boost:'Boost',set:'Réglages',price:'Prix $ARG',vault:'Coffre de staking',stake:'Staker 100',unstake:'Retirer',claim:'Réclamer',go:'Aller',done:'Fait ✓',copy:'Copier le lien',back:'Soutenir 100',convert:'Convertir',dep:'Dépôt',wd:'Retrait',lang:'Langue',snd:'Effets sonores',hap:'Retour haptique',theme:'Couleur du thème',reset:'Réinitialiser',level:'Niveau',friends:'Amis invités',none:'Aucun ami',watch:'Voir',adt:'Regarder une pub',adno:'Aucune pub disponible'},
+ar:{home:'الرئيسية',tasks:'المهام',games:'الألعاب',ref:'دعوة',meme:'ميم باد',wallet:'المحفظة',boost:'تعزيز',set:'الإعدادات',price:'سعر $ARG',vault:'خزنة التخزين',stake:'تخزين 100',unstake:'سحب',claim:'استلام',go:'اذهب',done:'تم ✓',copy:'نسخ الرابط',back:'ادعم 100',convert:'تحويل',dep:'إيداع',wd:'سحب',lang:'اللغة',snd:'المؤثرات الصوتية',hap:'الاهتزاز',theme:'لون السمة',reset:'إعادة ضبط',level:'المستوى',friends:'الأصدقاء المدعوون',none:'لا أصدقاء بعد',watch:'شاهد',adt:'شاهد إعلاناً',adno:'لا يوجد إعلان متاح حالياً'}};
 const t=k=>(L[S().set.lang]||L.en)[k]||L.en[k]||k;
 
 /* ===== Feedback ===== */
@@ -258,7 +266,7 @@ return `<svg viewBox="0 0 200 200"><defs><linearGradient id="ag" x1="0" y1="0" x
 <path d="M100 34l1.8 4.4 4.4 1.8-4.4 1.8-1.8 4.4-1.8-4.4-4.4-1.8 4.4-1.8z" fill="#00ff80" stroke="#0a3" stroke-width=".5"/></svg>`})();
 const esc=x=>String(x).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const ic=p=>`<svg class="gi" viewBox="0 0 24 24">${p}</svg>`,hue=n=>[...n].reduce((a,c)=>a+c.charCodeAt(0),0)*37%360;
-const TI={daily:[ic('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>'),'linear-gradient(135deg,#f3d36b,#8a6a0a)'],x:[ic('<path d="M4 4l16 16M20 4L4 20" stroke-width="2.4"/>'),'linear-gradient(135deg,#222,#000)'],tg:[ic('<path d="M21.5 3L2.5 10.5l7 2.5 2.5 7 3-4.5 4.5 3z"/>'),'linear-gradient(135deg,#2aabee,#1c6fb5)'],ig:[ic('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".8"/>'),'linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)']};
+const TI={daily:[ic('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>'),'linear-gradient(135deg,#f3d36b,#8a6a0a)'],x:[ic('<path d="M4 4l16 16M20 4L4 20" stroke-width="2.4"/>'),'linear-gradient(135deg,#222,#000)'],tg:[ic('<path d="M21.5 3L2.5 10.5l7 2.5 2.5 7 3-4.5 4.5 3z"/>'),'linear-gradient(135deg,#2aabee,#1c6fb5)'],ig:[ic('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".8"/>'),'linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)'],ad:[ic('<rect x="3" y="5" width="18" height="14" rx="3.5"/><path d="M10 9.2v5.6l4.8-2.8z"/>'),'linear-gradient(135deg,#ff8a3d,#d81b60)']};
 const CRY=`<svg class="crys" viewBox="0 0 120 90"><defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c8ffe0"/><stop offset=".5" stop-color="#00ff80"/><stop offset="1" stop-color="#05603a"/></linearGradient></defs><ellipse cx="60" cy="80" rx="46" ry="7" fill="#000" opacity=".5"/><path d="M32 30l14 18-6 26H22l-4-22z" fill="url(#cg)" opacity=".8"/><path d="M92 34l12 20-4 20H80l-4-24z" fill="url(#cg)" opacity=".75"/><path d="M60 6l18 26-8 42H50l-8-42z" fill="url(#cg)"/><path d="M60 6l18 26H60z M60 32l-10 42h10z" fill="#fff" opacity=".22"/></svg>`;
 const NET=`<svg class="net" viewBox="0 0 200 110"><g fill="none" stroke="var(--a)" stroke-opacity=".6" stroke-dasharray="3 3"><path d="M100 55L38 26M100 55L162 26M100 55L100 100"/></g><circle cx="100" cy="55" r="20" fill="#d4af37" stroke="#fff3b0" stroke-width="2"/><text x="100" y="63" text-anchor="middle" font-family="Cinzel" font-weight="800" font-size="22" fill="#1c1400">A</text><g fill="#07150f" stroke="var(--a)" stroke-width="2"><circle cx="38" cy="26" r="12"/><circle cx="162" cy="26" r="12"/><circle cx="100" cy="98" r="10"/></g><g fill="var(--a)"><circle cx="38" cy="23" r="3.5"/><circle cx="162" cy="23" r="3.5"/><circle cx="100" cy="95" r="3"/><path d="M31 33a7 6 0 0114 0zM155 33a7 6 0 0114 0zM94 104a6 5 0 0112 0z"/></g></svg>`;
 const SV=p=>`<svg class="ic" viewBox="0 0 24 24">${p}</svg>`;
@@ -274,6 +282,11 @@ const EM={'💎':`<svg class="ic gem" viewBox="0 0 24 24"><path d="M6 3h12l4 6-1
 '🌐':SV('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>'),
 '🎨':SV('<path d="M12 3a9 9 0 100 18c1.5 0 2-1 1.5-2s0-2 1.5-2h2a3 3 0 003-3c0-6-4-11-8-11z"/><circle cx="8" cy="11" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16" cy="11" r="1"/>')};
 const em=h=>h.replace(/(💎|⚡|🏦|⛏|🚀|🔥|✨|🔊|📳|🌐|🎨)\uFE0F?/g,m=>EM[m.replace('\uFE0F','')]);
+
+/* ===== Ads: daily counter + task card ===== */
+const adLeft=()=>{const s=S(),d=new Date().toDateString();if(s.adD!==d){s.adD=d;s.adN=0}return Math.max(0,AD_MAX-s.adN)};
+const adCard=()=>{const l=adLeft();return `<div class="card task ${l<=0?'dn':''}"><div class="bdg" style="background:${TI.ad[1]}">${TI.ad[0]}</div><div class="tx"><b>${t('adt')}</b><span class="rw">+${AD_R} 💎 · ${l}/${AD_MAX}</span></div><button data-act="watchAd" ${l<=0?'disabled':''}>${l<=0?t('done'):t('watch')}</button></div>`};
+
 const V={
 home:()=>`<div class="c" style="margin:2px 0 -8px"><div class="mut" style="letter-spacing:4px">BALANCE</div><div class="big">💎 <b data-b="pts"></b></div></div>
 <div class="scene"><i class="orb o1"></i><i class="orb o2"></i><div class="float"><div class="coin" id="coin">${LOGO}</div></div></div>
@@ -284,7 +297,7 @@ home:()=>`<div class="c" style="margin:2px 0 -8px"><div class="mut" style="lette
 <div class="row" style="margin-top:12px"><button data-act="stake">${t('stake')}</button><button class="ghost" data-act="unstake">${t('unstake')}</button><button data-act="claim">${t('claim')}</button></div></div>`,
 tasks:()=>{const s=S(),ok=k=>k.id==='daily'?Date.now()-s.ci>864e5:!s.done[k.id],dn=TASKS.filter(k=>!ok(k)).length,av=TASKS.reduce((a,k)=>a+(ok(k)?k.r:0),0);
 return `<h2>${t('tasks')}</h2><div class="card hero"><div class="ring" style="--p:${dn/TASKS.length*100}%"><b>${dn}/${TASKS.length}</b></div><div><h3>Daily Missions</h3><div class="mut">Complete missions to earn 💎 and XP</div><div class="chip" style="display:inline-block;margin-top:8px">+${av} 💎 available</div></div></div>`+TASKS.map(k=>{const d=!ok(k),rd=s.pend[k.id]&&Date.now()-s.pend[k.id]>6000,b=d?`<button disabled>${t('done')}</button>`:k.u&&!s.pend[k.id]?`<button data-act="tgo" data-v="${k.id}">${t('go')}</button>`:`<button data-act="tclaim" data-v="${k.id}">${k.u&&!rd?'…':t('claim')}</button>`;
-return `<div class="card task ${d?'dn':''}"><div class="bdg" style="background:${TI[k.id][1]}">${TI[k.id][0]}</div><div class="tx"><b>${k.n}</b><span class="rw">+${k.r} 💎</span></div>${b}</div>`}).join('')},
+return `<div class="card task ${d?'dn':''}"><div class="bdg" style="background:${TI[k.id][1]}">${TI[k.id][0]}</div><div class="tx"><b>${k.n}</b><span class="rw">+${k.r} 💎</span></div>${b}</div>`}).join('')+adCard()},
 games:()=>`<h2>${t('games')}</h2><div class="card game"><div class="gh"><div><h3>⛏ Tap Mine</h3><div class="mut">2 ⚡ → 2× 💎 / tap</div></div><span class="tag">LIVE</span></div><div class="stage"><i></i><i></i>${CRY}</div><div class="row"><span class="mut">⚡ <b data-b="energy"></b> / <b data-b="tank"></b></span><span class="mut">x${S().mt*2}</span></div><div class="bar"><i id="eb"></i></div><button class="cta" data-act="mine">Mine</button></div>
 <div class="card game c"><div class="gh"><div style="text-align:start"><h3>⚡ Reflex Test</h3><div class="mut">Tap when the orb glows — faster pays more (max 100 💎)</div></div><span class="tag">SKILL</span></div><div class="rxw"><div id="rx" class="idle" data-act="rx">Tap to start</div></div></div>`,
 ref:()=>{const l=`https://t.me/${BOT}?startapp=ref_${U.id}`,f=S().friends;return `<h2>${t('ref')}</h2><div class="card c">${NET}<h3>Invite friends, earn together</h3><div class="mut">+500 💎 for every friend who joins</div></div>
@@ -325,6 +338,34 @@ function bindCoin(){const c=$('#coin');c.addEventListener('pointerdown',e=>{cons
  c.style.transform=`translate3d(0,0,0) rotateX(${-py*35}deg) rotateY(${px*35}deg) scale(.96)`;tap(e.clientX,e.clientY)});
  ['pointerup','pointerleave','pointercancel'].forEach(ev=>c.addEventListener(ev,()=>c.style.transform='translate3d(0,0,0)'))}
 
+/* ===== Adsgram: watch ad → reward ===== */
+let adBusy=false;
+function watchTaskAd(){
+ if(adBusy)return;
+ const s=S();
+ if(adLeft()<=0){Store.persist();return toast(t('done'))}
+ const wait=AD_CD-(Date.now()-(s.adTs||0));
+ if(wait>0)return toast('⏳ '+Math.ceil(wait/1000)+'s');
+ const ctl=getAd();
+ if(!ctl)return toast(t('adno'));
+ adBusy=true;
+ ctl.show().then(res=>{
+  // Adsgram resolves with {done:true,...} when the ad was watched to the end
+  if(res&&res.done===false)return toast(t('adno'));
+  const st=S();
+  if(adLeft()<=0)return;
+  st.adN++;st.adTs=Date.now();
+  Store.earn(AD_R);          // updates points + XP, persists and calls hud()
+  beep(800,.15);hap('medium');
+  toast('+'+AD_R+' 💎');
+  hud();
+  if(cur==='tasks')go('tasks',0); // refresh the tasks view (counter / state)
+ }).catch(()=>{
+  // ad skipped, closed early, or failed to load
+  toast(t('adno'));
+ }).finally(()=>{adBusy=false});
+}
+
 /* ===== Actions ===== */
 let rx={st:0,t0:0,to:0};
 const A={
@@ -334,6 +375,7 @@ unstake:()=>{const s=S();s.pts+=s.staked+pend();s.staked=0;s.stk=Date.now();Stor
 claim:()=>{const p=pend();if(p<1)return toast('Nothing yet');S().stk=Date.now();Store.earn(Math.floor(p),0)},
 tgo:id=>{const k=TASKS.find(x=>x.id===id);tg?tg.openLink(k.u):window.open(k.u,'_blank');S().pend[id]=Date.now();Store.persist();setTimeout(()=>cur==='tasks'&&go('tasks',0),6200);go('tasks',0)},
 tclaim:id=>{const k=TASKS.find(x=>x.id===id),s=S();if(id==='daily')s.ci=Date.now();else{if(Date.now()-s.pend[id]<6000)return toast('Verifying…');s.done[id]=1}Store.earn(k.r);beep(800,.15);hap('medium');go('tasks',0)},
+watchAd:()=>watchTaskAd(),
 mine:()=>{tap(innerWidth/2,innerHeight/2,2,2);const c=$('.crys');if(c){c.classList.remove('hit');void c.getBoundingClientRect();c.classList.add('hit')}},
 share:l=>{const u='https://t.me/share/url?url='+encodeURIComponent(l)+'&text='+encodeURIComponent('Join ARGANIA ($ARG) and mine with me!');tg?tg.openTelegramLink(u):window.open(u,'_blank')},
 rx:()=>{const b=$('#rx'),set=(c,x)=>{b.className=c;b.textContent=x};if(rx.st===0){rx.st=1;set('wait','Wait…');rx.to=setTimeout(()=>{rx.st=2;rx.t0=performance.now();set('go','TAP!')},1500+Math.random()*2500)}
