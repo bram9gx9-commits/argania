@@ -213,8 +213,8 @@ const $=s=>document.querySelector(s);
 /* ===== Adsgram ===== */
 // Controller is created once; guarded in case the SDK is blocked / not loaded (e.g. ad-blocker, outside Telegram)
 let adController=null;
-try{if(window.Adsgram)adController=window.Adsgram.init({blockId:"51168"})}catch(e){adController=null}
-const getAd=()=>{if(!adController&&window.Adsgram){try{adController=window.Adsgram.init({blockId:"51168"})}catch(e){}}return adController};
+try{if(window.Adsgram)adController=window.Adsgram.init({blockId:"51569"})}catch(e){adController=null}
+const getAd=()=>{if(!adController&&window.Adsgram){try{adController=window.Adsgram.init({blockId:"51569"})}catch(e){}}return adController};
 const AD_R=100,AD_CD=60000,AD_MAX=10; // reward (pts), cooldown (ms), max ads per day
 
 /* ===== Store: single mutation gateway (swap persist() for Supabase RPC later) ===== */
