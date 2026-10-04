@@ -206,6 +206,33 @@ nav button{font-family:var(--f)}
 .legal .lh{font:700 11px var(--f);letter-spacing:3px;color:var(--a);margin:4px 0 10px;display:block}
 .legal .warn{border-inline-start:3px solid var(--g);padding:8px 12px;background:rgba(212,175,55,.08);border-radius:10px;margin:0 0 10px}
 .legal button{width:100%}
+
+/* ===== VAULT SYNC (memory puzzle game) ===== */
+.vg .cta{font-size:13px;letter-spacing:2px;margin-top:14px}
+.vgx{display:flex;gap:8px;margin:14px 0 10px}
+.vgx span{flex:1;text-align:center;padding:10px 4px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--ln);font-size:10px;letter-spacing:1.5px}
+.vgx b{display:block;font:700 20px var(--f);color:var(--a);letter-spacing:0}
+.vgt{line-height:1.55;margin:0 0 12px}
+.vgr{text-align:center;padding:14px 0 4px}
+.vgr .vgn{font:700 38px var(--f);letter-spacing:-1px;background:linear-gradient(180deg,#fff 20%,var(--g));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(212,175,55,.35))}
+.vgr.w .vgn{background:linear-gradient(180deg,#fff 20%,var(--a));-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 16px color-mix(in srgb,var(--a) 45%,transparent))}
+.vgs{display:flex;gap:6px;margin:12px 0}
+.vgs span{flex:1;text-align:center;padding:8px 2px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--ln);font:700 9px var(--f);letter-spacing:1.6px}
+.vgs b{display:block;font-size:15px;letter-spacing:0;color:var(--a);margin-top:2px}
+.vgg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.vgc{perspective:600px;aspect-ratio:1/1.12;cursor:pointer;touch-action:manipulation}
+.vgn2{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,1.25,.4,1)}
+.vgc.f .vgn2{transform:rotateY(180deg)}
+.vb,.vf{position:absolute;inset:0;border-radius:16px;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.vb{background:linear-gradient(145deg,rgba(255,255,255,.1),rgba(0,255,128,.05) 45%,rgba(3,7,5,.7));border:1px solid color-mix(in srgb,var(--a) 35%,transparent);box-shadow:inset 0 1px 0 #fff3,0 6px 18px #0007}
+.vb i{width:12px;height:12px;border-radius:3px;rotate:45deg;background:linear-gradient(135deg,var(--a),var(--g));opacity:.7;box-shadow:0 0 12px var(--a)}
+.vf{transform:rotateY(180deg);color:var(--c);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--c) 28%,#07150f),#07150f 75%);border:1px solid color-mix(in srgb,var(--c) 70%,transparent);box-shadow:0 0 22px color-mix(in srgb,var(--c) 40%,transparent),inset 0 1px 0 #fff3}
+.vf .gi{width:34px;height:34px;filter:drop-shadow(0 0 8px var(--c))}
+.vgc.d{pointer-events:none}.vgc.d .vf{opacity:.55;box-shadow:none}
+.vgc.s .vb{border-color:var(--g);box-shadow:0 0 16px rgba(212,175,55,.55),inset 0 0 12px rgba(212,175,55,.25);animation:vgp 1.4s ease-in-out infinite}
+@keyframes vgp{50%{box-shadow:0 0 26px rgba(212,175,55,.9),inset 0 0 16px rgba(212,175,55,.4)}}
+.vgc.sh{animation:vgs .6s}
+@keyframes vgs{20%{transform:translate3d(-6px,0,0)}40%{transform:translate3d(6px,0,0)}60%{transform:translate3d(-4px,0,0)}80%{transform:translate3d(4px,0,0)}}
 </style></head>
 <body>
 <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gemg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".45" style="stop-color:var(--a)"/><stop offset="1" stop-color="#05503a"/></linearGradient></defs></svg>
@@ -311,7 +338,8 @@ tasks:()=>{const s=S(),ok=k=>k.id==='daily'?Date.now()-s.ci>864e5:!s.done[k.id],
 return `<h2>${t('tasks')}</h2><div class="card hero"><div class="ring" style="--p:${dn/TASKS.length*100}%"><b>${dn}/${TASKS.length}</b></div><div><h3>Daily Missions</h3><div class="mut">Complete missions to earn 💎 and XP</div><div class="chip" style="display:inline-block;margin-top:8px">+${av} 💎 available</div></div></div>`+TASKS.map(k=>{const d=!ok(k),rd=s.pend[k.id]&&Date.now()-s.pend[k.id]>6000,b=d?`<button disabled>${t('done')}</button>`:k.u&&!s.pend[k.id]?`<button data-act="tgo" data-v="${k.id}">${t('go')}</button>`:`<button data-act="tclaim" data-v="${k.id}">${k.u&&!rd?'…':t('claim')}</button>`;
 return `<div class="card task ${d?'dn':''}"><div class="bdg" style="background:${TI[k.id][1]}">${TI[k.id][0]}</div><div class="tx"><b>${k.n}</b><span class="rw">+${k.r} 💎</span></div>${b}</div>`}).join('')+adCard()},
 games:()=>`<h2>${t('games')}</h2><div class="card game"><div class="gh"><div><h3>⛏ Tap Mine</h3><div class="mut">2 ⚡ → 2× 💎 / tap</div></div><span class="tag">LIVE</span></div><div class="stage"><i></i><i></i>${CRY}</div><div class="row"><span class="mut">⚡ <b data-b="energy"></b> / <b data-b="tank"></b></span><span class="mut">x${S().mt*2}</span></div><div class="bar"><i id="eb"></i></div><button class="cta" data-act="mine">Mine</button></div>
-<div class="card game c"><div class="gh"><div style="text-align:start"><h3>⚡ Reflex Test</h3><div class="mut">Tap when the orb glows — faster pays more (max 100 💎)</div></div><span class="tag">SKILL</span></div><div class="rxw"><div id="rx" class="idle" data-act="rx">Tap to start</div></div></div>`,
+<div class="card game c"><div class="gh"><div style="text-align:start"><h3>⚡ Reflex Test</h3><div class="mut">Tap when the orb glows — faster pays more (max 100 💎)</div></div><span class="tag">SKILL</span></div><div class="rxw"><div id="rx" class="idle" data-act="rx">Tap to start</div></div></div>
+<div class="card game vg" id="vg">${vgHTML()}</div>`,
 ref:()=>{const l=`https://t.me/Argania_ARG_bot/Argania?startapp=ref_${U.id}`,f=S().friends;return `<h2>${t('ref')}</h2><div class="card c">${NET}<h3>Invite friends, earn together</h3><div class="mut">+500 💎 for every friend who joins</div></div>
 <div class="card"><div class="mut" style="letter-spacing:2px">YOUR LINK</div><input type="text" readonly value="${l}" id="rl" style="margin:8px 0 10px"><div class="row"><button style="flex:1" data-act="copy" data-v="${l}">${t('copy')}</button><button class="ghost" style="flex:1" data-act="share" data-v="${l}">Share ✈️</button></div></div>
 <div class="card"><h3>${t('friends')} (${f.length})</h3>${f.length?f.map(x=>`<div class="row" style="padding:5px 0"><div class="row" style="gap:10px"><i class="av">${esc((x.name||'?')[0]).toUpperCase()}</i>${esc(x.name)}</div><span class="rw">+500</span></div>`).join(''):`<div class="mut">${t('none')}</div>`}</div>`},
@@ -406,6 +434,51 @@ th:c=>{S().set.th=c;Store.persist();go('set',0)},
 reset:()=>{if(confirm('Reset all data?')){localStorage.removeItem(KEY);Store.s=def();go('home')}}};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.dataset.act==='mine'&&0)return;if(b.dataset.act==='mine')return;A[b.dataset.act](b.dataset.v,b)});
 document.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-act=mine]');if(b)A.mine()});
+
+/* ===== Vault Sync: memory puzzle (uses Store.spend / Store.earn / hud) ===== */
+const VG_COST=50,VG_TRIES=9,VG_CAP=600,VG_N=6;
+const VG_ICO=['<path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/>','<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>','<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>','<path d="M12 3l9 17H3z"/>','<path d="M12 2l9 5v10l-9 5-9-5V7z"/>','<path d="M12 3l2.5 6.5L21 10l-5 4.5L17.5 21 12 17.5 6.5 21 8 14.5 3 10l6.5-.5z"/>'];
+const VG_COL=['#00ff80','#d4af37','#22d3ee','#a78bfa','#ff6b9a','#ff9f43'];
+let VG={st:0,last:null},vgLuck=0,vgTm=0;
+// Surge multiplier roll: weights shift toward bigger multipliers as the Luck Field rises (after weak rounds)
+const vgRoll=()=>{const L=vgLuck,w=[50-L*3,32,14+L*2,4+L*1.2],m=[1.5,2,3,5];let r=Math.random()*w.reduce((a,b)=>a+b),i=0;while(i<3&&r>w[i]){r-=w[i];i++}return m[i]};
+const vgMsg=g=>g.sf?'SURGE ×'+g.sf+' locked in':g.seen?'Surge pair detected — multiplier unknown':'A hidden Surge pair is in the vault — find it';
+const vgCell=(g,c,i)=>`<div class="vgc ${c.open||c.done?'f':''}${c.done?' d':''}${g.seen&&c.k===g.sk&&!c.done?' s':''}${g.shk.includes(i)?' sh':''}" data-i="${i}" data-act="vgFlip" data-v="${i}"><div class="vgn2"><div class="vb"><i></i></div><div class="vf" style="--c:${VG_COL[c.k]}"><svg class="gi" viewBox="0 0 24 24">${VG_ICO[c.k]}</svg></div></div></div>`;
+function vgHTML(){const g=VG,head=`<div class="gh"><div style="text-align:start"><h3>${ic('<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>')} Vault Sync</h3><div class="mut">Match the pairs · chains pay exponentially</div></div><span class="tag">PUZZLE</span></div>`;
+ if(g.st===1)return head+`<div class="vgs"><span>ATTEMPTS<b id="vga">${g.tries}</b></span><span>CHAIN<b id="vgc">x${g.chain}</b></span><span>POT<b id="vgp">${fmt(g.pot)}</b></span></div><div class="vgg">${g.cards.map((c,i)=>vgCell(g,c,i)).join('')}</div><div class="mut c" id="vgm" style="margin-top:12px">${vgMsg(g)}</div>`;
+ const l=g.last,lk=vgLuck;
+ return head+(l?`<div class="vgr ${l.win?'w':''}"><div class="mut" style="letter-spacing:3px">${l.win?'VAULT CRACKED':'SIGNAL LOST'}</div><div class="vgn">${l.pay>0?'+':''}${fmt(l.pay)} 💎</div><div class="mut">Net ${l.pay-VG_COST>=0?'+':''}${fmt(l.pay-VG_COST)} · ${l.m}/${VG_N} pairs${l.sf?' · SURGE ×'+l.sf:''}</div></div>`
+ :`<div class="vgx"><span><b>${VG_N}</b>PAIRS</span><span><b>${VG_TRIES}</b>ATTEMPTS</span><span><b>${VG_COST}</b>ENTRY</span></div>`)
+ +`<div class="mut vgt" style="margin-top:12px">Chain matches without a miss: every link pays more than the last. One hidden <b>Surge</b> pair multiplies your pot, so spot it and save it for last. The vault may phase-shift mid-round and swap hidden cards.</div>
+<div class="row"><span class="mut">LUCK FIELD</span><span class="mut">${['Cold','Cool','Warm','Hot','Blazing','Overload'][lk]}</span></div><div class="bar"><i style="width:${(lk+1)/6*100}%"></i></div><div class="mut">A higher Luck Field makes bigger Surge multipliers more likely.</div>
+<button class="cta" data-act="vgStart">${l?'Play again':'Enter Vault'} · ${VG_COST} 💎</button>`}
+function vgRender(){const e=$('#vg');if(e)e.innerHTML=em(vgHTML())}
+function vgSync(){const g=VG,e=$('#vg');if(!e||g.st!==1)return;if(!e.querySelector('.vgg'))return vgRender();
+ g.cards.forEach((c,i)=>{const n=e.querySelector('[data-i="'+i+'"]');if(!n)return;n.classList.toggle('f',!!(c.open||c.done));n.classList.toggle('d',!!c.done);n.classList.toggle('s',!!(g.seen&&c.k===g.sk&&!c.done))});
+ const set=(id,v)=>{const x=$(id);if(x)x.textContent=v};set('#vga',g.tries);set('#vgc','x'+g.chain);set('#vgp',fmt(g.pot));set('#vgm',vgMsg(g))}
+function vgEnd(){const g=VG,win=g.matched>=VG_N,pay=g.pot+(win?g.tries*5:0);
+ if(pay>0)Store.earn(pay,Math.round(pay/2));
+ vgLuck=pay<VG_COST?Math.min(5,vgLuck+1):Math.max(0,vgLuck-2);
+ VG={st:2,last:{win,pay,m:g.matched,sf:g.sf}};
+ if(win){beep(900,.2);hap('heavy')}else hap('light');
+ hud();vgRender()}
+function vgAfter(){const g=VG;
+ if(g.matched>=VG_N||g.tries<=0)return vgEnd();
+ if(!g.shifted&&g.used===g.shiftAt){const cl=g.cards.map((c,i)=>i).filter(i=>!g.cards[i].done);
+  if(cl.length>=4){g.shifted=true;cl.sort(()=>Math.random()-.5);const x=cl[0],y=cl[1];[g.cards[x],g.cards[y]]=[g.cards[y],g.cards[x]];g.shk=[x,y];toast('PHASE SHIFT — 2 hidden cards swapped');hap('heavy');beep(240,.2);vgRender();setTimeout(()=>{g.shk=[]},900);return}}
+ vgSync()}
+A.vgStart=()=>{if(VG.st===1)return;if(!Store.spend(VG_COST))return;
+ const ks=[];for(let k=0;k<VG_N;k++)ks.push(k,k);for(let i=ks.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ks[i],ks[j]]=[ks[j],ks[i]]}
+ VG={st:1,last:VG.last,cards:ks.map(k=>({k,open:0,done:0})),first:null,lock:0,tries:VG_TRIES,chain:0,pot:0,matched:0,used:0,sk:Math.floor(Math.random()*VG_N),sm:vgRoll(),seen:false,sf:0,shiftAt:Math.random()<.6?3+Math.floor(Math.random()*3):-1,shifted:false,shk:[]};
+ hap('medium');beep(660,.08);vgRender()};
+A.vgFlip=v=>{const g=VG;if(g.st!==1||g.lock)return;const i=+v,c=g.cards[i];if(!c||c.open||c.done)return;
+ c.open=1;if(c.k===g.sk)g.seen=true;hap();beep(560+c.k*60,.05);
+ if(g.first===null){g.first=i;vgSync();return}
+ const a=g.cards[g.first];g.first=null;g.tries--;g.used++;
+ if(a.k===c.k){a.done=c.done=1;g.matched++;g.chain++;g.pot=Math.min(VG_CAP,g.pot+Math.round(3*Math.pow(g.chain,1.5)));
+  if(a.k===g.sk){g.sf=g.sm;g.pot=Math.min(VG_CAP,Math.round(g.pot*g.sm)+10);toast('SURGE ×'+g.sm);beep(980,.18);hap('heavy')}else{beep(820,.1);hap('medium')}
+  vgAfter()}
+ else{g.chain=0;g.lock=1;vgSync();clearTimeout(vgTm);vgTm=setTimeout(()=>{a.open=0;c.open=0;g.lock=0;vgAfter()},750)}};
 
 /* ===== Swipe navigation ===== */
 let sx=0;const M=$('#view');M.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
