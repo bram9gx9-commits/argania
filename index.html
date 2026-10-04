@@ -6,6 +6,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--a:#00ff80;--g:#d4af37;--bg:#030705}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -479,6 +480,38 @@ A.vgFlip=v=>{const g=VG;if(g.st!==1||g.lock)return;const i=+v,c=g.cards[i];if(!c
   if(a.k===g.sk){g.sf=g.sm;g.pot=Math.min(VG_CAP,Math.round(g.pot*g.sm)+10);toast('SURGE ×'+g.sm);beep(980,.18);hap('heavy')}else{beep(820,.1);hap('medium')}
   vgAfter()}
  else{g.chain=0;g.lock=1;vgSync();clearTimeout(vgTm);vgTm=setTimeout(()=>{a.open=0;c.open=0;g.lock=0;vgAfter()},750)}};
+
+/* ===== Supabase cloud sync: points + energy, keyed by telegram_id (localStorage stays as the offline cache) ===== */
+const SB_URL='https://sukufaxrovpdyhorlcla.supabase.co',SB_KEY='sb_publishable_wEm72AenwEqnD2k3eEUa0w_StTAwe1e',SB_TABLE='users';
+let SB=null;try{if(window.supabase&&window.supabase.createClient)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}})}catch(e){SB=null}
+const CID=U.id||0; // guests (opened outside Telegram, id 0) are never synced
+let cReady=false,cDirty=false,cBusy=false,cTm=0;
+const cRound=n=>Math.round(n*100)/100;
+const _persist=Store.persist.bind(Store);
+Store.persist=function(){_persist();cQueue()}; // every existing earn / spend / action now also queues a cloud save
+function cQueue(){if(!SB||!CID)return;cDirty=true;if(cReady&&!cTm)cTm=setTimeout(cFlush,2500)} // throttled: at most one write per ~2.5s
+async function cFlush(){cTm=0;if(!SB||!CID||!cReady||!cDirty||cBusy)return;cBusy=true;cDirty=false;
+ try{regen();const s=S();
+  const {data,error}=await SB.from(SB_TABLE).upsert({telegram_id:CID,username:U.username||null,first_name:U.first_name||null,pts:cRound(s.pts),energy:cRound(s.energy)},{onConflict:'telegram_id'}).select('updated_at').single();
+  if(error)throw error;s.cl=data.updated_at;_persist()}
+ catch(e){cDirty=true;console.warn('[sync]',e&&e.message||e)}
+ finally{cBusy=false;if(cDirty&&!cTm)cTm=setTimeout(cFlush,8000)}}
+async function cInit(){if(!SB||!CID)return;
+ try{
+  const {data:row,error}=await SB.from(SB_TABLE).select('telegram_id,pts,energy,updated_at').eq('telegram_id',CID).maybeSingle();
+  if(error)throw error;
+  const s=S();
+  if(!row){cDirty=true} // first visit: create the cloud row from the current (default) values
+  else if(row.updated_at!==s.cl){ // cloud was written by another device / session: cloud wins
+   const t0=Date.parse(row.updated_at),el=isNaN(t0)?0:Math.max(0,(Date.now()-t0)/1000);
+   s.pts=Number(row.pts)||0;s.energy=Math.min(s.tank,(Number(row.energy)||0)+el);s.ts=Date.now();s.cl=row.updated_at;cDirty=false;_persist();hud()}
+  cReady=true;if(cDirty)cFlush()}
+ catch(e){console.warn('[sync]',e&&e.message||e);setTimeout(cInit,15000)}}
+// "Reset data" must also reset the cloud copy, otherwise the next launch would restore it
+const _reset=A.reset;A.reset=function(){_reset.apply(this,arguments);if(!localStorage.getItem(KEY)){cDirty=true;cFlush()}};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&cDirty){clearTimeout(cTm);cFlush()}});
+addEventListener('pagehide',()=>{if(cDirty){clearTimeout(cTm);cFlush()}});
+cInit();
 
 /* ===== Swipe navigation ===== */
 let sx=0;const M=$('#view');M.addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
