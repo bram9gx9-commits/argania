@@ -7,6 +7,9 @@
 <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- TON Connect -->
+<script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@2/dist/tonconnect-ui.min.js"></script>
 <style>
 :root{--a:#00ff80;--g:#d4af37;--bg:#030705}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -348,7 +351,15 @@ meme:()=>`<h2>${t('meme')}</h2><div class="card hero"><div class="bdg" style="ba
 return `<div class="card"><div class="row"><div class="row" style="gap:12px"><div class="tok" style="background:conic-gradient(from 200deg,hsl(${h} 90% 60%),hsl(${(h+70)%360} 90% 42%),hsl(${h} 90% 60%))"><i>${m.n[0]}</i></div><div><b>${m.n}</b><div class="mut">$${m.n.slice(0,5).toUpperCase()} · ${i===1?'🔥 Hot':'✨ New'}</div></div></div><div class="pc" style="--p:${pc}%"><b>${Math.round(pc)}%</b></div></div><div class="bar"><i style="width:${pc}%"></i></div><div class="row"><span class="mut">${fmt(r)} / ${fmt(m.g)} 💎 · You ${fmt(b)}</span><button data-act="back" data-v="${m.id}">${t('back')}</button></div></div>`}).join(''),
 wallet:()=>`<h2>${t('wallet')}</h2><div class="card vcard"><div class="row"><b class="wm2">ARGANIA</b><span class="mut">PLATINUM</span></div><div><div class="chipic"></div><div class="mut">TOTAL VALUE</div><div class="big2">$<b data-b="usd"></b></div></div><div class="row"><span class="mut">${esc(U.first_name).toUpperCase()}</span><span class="mut">•••• ${String(U.id).slice(-4).padStart(4,'0')}</span></div></div>
 <div class="acts">${[['conv','⇄',t('convert')],['soon','↓',t('dep')],['soon','↑',t('wd')]].map(a=>`<button class="act" data-act="${a[0]}"><i>${a[1]}</i>${a[2]}</button>`).join('')}</div>`+
-[['A','ARGANIA','$ARG','arg','linear-gradient(135deg,#f3d36b,#8a6a0a)'],['◆','Toncoin','TON','ton','linear-gradient(135deg,#2aabee,#0a5db5)'],['T','Tether','USDT','usdt','linear-gradient(135deg,#26a17b,#0b6b4e)']].map(a=>`<div class="card row"><div class="row" style="gap:12px"><div class="cico" style="background:${a[4]}">${a[0]}</div><div><b>${a[1]}</b><div class="mut">${a[2]}</div></div></div><b data-b="${a[3]}"></b></div>`).join('')+`<div class="mut c">1,000 💎 = 1 $ARG</div>`,
+[['A','ARGANIA','$ARG','arg','linear-gradient(135deg,#f3d36b,#8a6a0a)'],['◆','Toncoin','TON','ton','linear-gradient(135deg,#2aabee,#0a5db5)'],['T','Tether','USDT','usdt','linear-gradient(135deg,#26a17b,#0b6b4e)']].map(a=>`<div class="card row"><div class="row" style="gap:12px"><div class="cico" style="background:${a[4]}">${a[0]}</div><div><b>${a[1]}</b><div class="mut">${a[2]}</div></div></div><b data-b="${a[3]}"></b></div>`).join('')+`<div class="mut c">1,000 💎 = 1 $ARG</div>`+`<div id="wallet-section" style="text-align: center; padding: 20px; color: #fff;">
+    <h3>Argania Wallet 🪙</h3>
+    <p>Connect your TON wallet to view your real $ARG token balance</p>
+    <div id="ton-connect-button" style="margin: 20px auto; display: flex; justify-content: center;"></div>
+    <div id="wallet-info" style="display: none; margin-top: 15px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px;">
+        <p>Address: <span id="wallet-address" style="font-size: 12px; color: #ffd700;">Disconnected</span></p>
+        <p>Balance: <span id="wallet-balance" style="color: #00ffcc;">0</span> $ARG</p>
+    </div>
+</div>`,
 boost:()=>{const s=S(),pp=n=>Array.from({length:8},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join(''),bt=(n,i,lv,c,k,lab)=>`<div class="card task"><div class="bdg" style="background:linear-gradient(135deg,var(--a),#0a5)">${i}</div><div class="tx"><b>${n}</b><span class="rw">Lv ${lv} · ${c} 💎</span><div class="pips">${pp(lv)}</div></div><button data-act="up" data-v="${k}">${lab}</button></div>`;
 return `<h2>${t('boost')}</h2><div class="card c"><div class="lvring"><div class="avx">${esc(U.first_name[0]||'?').toUpperCase()}</div></div><span class="lvb">LV <b data-b="lv"></b></span><h3 style="margin-top:8px">${esc(U.first_name)}${U.username?' · @'+esc(U.username):''}</h3><div class="mut">ID ${U.id} · XP <b data-b="xp"></b></div></div>
 <div class="stats"><div class="card"><small>Per tap</small><b>x${s.mt}</b></div><div class="card"><small>Energy</small><b>${s.tank}</b></div><div class="card"><small>Staked</small><b data-b="staked"></b></div></div>`+
@@ -530,4 +541,101 @@ M.addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-sx;if(Math
  function loop(){if(!on)return;pts.rotation.y+=.0006;cam.position.x+=(cx-cam.position.x)*.08;cx*=.93;cam.lookAt(0,1,-2);ico.rotation.y+=.002;k*=.92;ico.scale.setScalar(1+k*.25);ring.rotation.z+=.004+k*.05;ico.rotation.x+=.001;grid.position.z=(grid.position.z+.01)%1;r.render(sc,cam);requestAnimationFrame(loop)}loop()})();
 
 $('.bal .gm').innerHTML=EM['💎'];$('#mc').innerHTML=LOGO;go('home');if(window.setBgColor)setBgColor(S().set.th);
-</script></body></html>
+</script><script>
+/* ===== TON Connect wallet (additive + isolated: no existing function is touched) ===== */
+(function(){
+'use strict';
+/* --- CONFIG --- */
+var MANIFEST_URL=location.origin+'/tonconnect-manifest.json'; // must be a public JSON file on your domain
+var ARG_JETTON_MASTER='';  // TODO: your $ARG jetton master contract address (EQ... / UQ...)
+var ARG_DECIMALS=9;        // used only if the API does not return the token decimals
+var API='https://tonapi.io/v2';
+
+var ui=null,state={wallet:null,addr:'',bal:'0'},req=0,lastFetch=0,first=true,warned=false,raf=0;
+var q=function(s){return document.querySelector('.view:not(.ex) '+s)};   // ignore the exiting-view clone
+var setText=function(el,v){if(el&&el.textContent!==v)el.textContent=v};
+
+/* The Wallet view is re-rendered on every visit, so the TON Connect button lives in ONE persistent
+   element (id="ton-connect-button") that is moved into the freshly rendered placeholder each time. */
+var btn=document.createElement('div');btn.id='ton-connect-button';
+btn.style.cssText='margin: 20px auto; display: flex; justify-content: center;';
+var holder=document.createElement('div');holder.style.display='none';holder.appendChild(btn);document.body.appendChild(holder);
+
+function friendly(w){
+ var raw=w.account.address;
+ try{return TON_CONNECT_UI.toUserFriendlyAddress(raw,w.account.chain==='-3')}catch(e){return raw}
+}
+function short(a){return a.length>14?a.slice(0,6)+'…'+a.slice(-6):a}
+function fmtUnits(raw,dec){
+ var s=String(raw).replace(/\D/g,'')||'0';while(s.length<=dec)s='0'+s;
+ var i=s.slice(0,s.length-dec).replace(/\B(?=(\d{3})+(?!\d))/g,','),f=s.slice(s.length-dec).replace(/0+$/,'').slice(0,4);
+ return f?i+'.'+f:i;
+}
+
+/* Push current state into the Wallet view (if it is on screen). Only writes when a value changed. */
+function sync(){
+ var info=q('#wallet-info');if(!info)return;
+ var on=!!state.wallet,d=on?'block':'none';
+ if(info.style.display!==d)info.style.display=d;
+ var a=q('#wallet-address');setText(a,on?short(state.addr):'Disconnected');if(a)a.title=on?state.addr:'';
+ setText(q('#wallet-balance'),on?state.bal:'0');
+}
+
+function fetchBalance(w){
+ var id=++req;
+ if(!ARG_JETTON_MASTER){
+  if(!warned){warned=true;console.warn('[TON Connect] Set ARG_JETTON_MASTER to display the real $ARG balance.')}
+  state.bal='—';sync();return;
+ }
+ state.bal='…';lastFetch=Date.now();sync();
+ fetch(API+'/accounts/'+encodeURIComponent(w.account.address)+'/jettons/'+encodeURIComponent(ARG_JETTON_MASTER))
+  .then(function(r){if(r.status===404)return null;if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+  .then(function(j){
+   if(id!==req)return;
+   var dec=j&&j.jetton&&j.jetton.decimals!=null?+j.jetton.decimals:ARG_DECIMALS;
+   state.bal=j?fmtUnits(j.balance,dec):'0';sync();
+  })
+  .catch(function(e){if(id!==req)return;console.warn('[TON Connect] balance request failed',e);state.bal='—';sync()});
+}
+
+/* Wallet connection state handler */
+function onStatus(w){
+ var was=!!state.wallet;
+ state.wallet=w||null;
+ if(w){state.addr=friendly(w);fetchBalance(w)}
+ else{state.addr='';state.bal='0';req++}      // req++ discards any in-flight balance response
+ sync();
+ if(!first&&typeof toast==='function'){
+  if(w&&!was)toast('Wallet connected ✓');else if(!w&&was)toast('Wallet disconnected');
+ }
+ first=false;
+}
+
+function init(){
+ if(!window.TON_CONNECT_UI||!TON_CONNECT_UI.TonConnectUI){console.warn('[TON Connect] UI library not loaded');return}
+ try{
+  var o={manifestUrl:MANIFEST_URL,buttonRootId:'ton-connect-button',uiPreferences:{theme:'DARK'}};
+  if(typeof BOT!=='undefined'&&BOT)o.actionsConfiguration={twaReturnUrl:'https://t.me/'+BOT};
+  ui=new TON_CONNECT_UI.TonConnectUI(o);
+  ui.onStatusChange(onStatus,function(e){console.warn('[TON Connect] status error',e)});
+ }catch(e){console.warn('[TON Connect] init failed',e);ui=null}
+}
+
+/* Place the persistent button into the placeholder of the Wallet view whenever it is rendered */
+function mount(){
+ var el=q('#ton-connect-button');if(!el)return;
+ if(!ui){if(!el.dataset.err){el.dataset.err='1';el.textContent='Wallet service unavailable — check your connection.'}return}
+ if(el!==btn){btn.style.cssText=el.style.cssText;el.replaceWith(btn);
+  if(state.wallet&&Date.now()-lastFetch>30000)fetchBalance(state.wallet)}
+ sync();
+}
+
+init();
+var view=document.getElementById('view');
+if(view)new MutationObserver(function(){
+ if(raf)return;raf=requestAnimationFrame(function(){raf=0;mount()});
+}).observe(view,{childList:true,subtree:true});
+mount();
+})();
+</script>
+</body></html>
