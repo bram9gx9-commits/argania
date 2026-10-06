@@ -546,7 +546,9 @@ $('.bal .gm').innerHTML=EM['💎'];$('#mc').innerHTML=LOGO;go('home');if(window.
 (function(){
 'use strict';
 /* --- CONFIG --- */
-var MANIFEST_URL=location.origin+'/tonconnect-manifest.json'; // must be a public JSON file on your domain
+var MANIFEST_URL='https://bram9gx9-commits.github.io/argania/tonconnect-manifest.json';
+var TWA_RETURN_URL='https://t.me/Argania_ARG_bot'; // where Telegram sends the user back after approving in the wallet app
+var loading=true;
 var ARG_JETTON_MASTER='';  // TODO: your $ARG jetton master contract address (EQ... / UQ...)
 var ARG_DECIMALS=9;        // used only if the API does not return the token decimals
 var API='https://tonapi.io/v2';
@@ -559,7 +561,7 @@ var setText=function(el,v){if(el&&el.textContent!==v)el.textContent=v};
    element (id="ton-connect-button") that is moved into the freshly rendered placeholder each time. */
 var btn=document.createElement('div');btn.id='ton-connect-button';
 btn.style.cssText='margin: 20px auto; display: flex; justify-content: center;';
-var holder=document.createElement('div');holder.style.display='none';holder.appendChild(btn);document.body.appendChild(holder);
+var holder=document.createElement('div');holder.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden';holder.appendChild(btn);document.body.appendChild(holder);
 
 function friendly(w){
  var raw=w.account.address;
@@ -574,6 +576,7 @@ function fmtUnits(raw,dec){
 
 /* Push current state into the Wallet view (if it is on screen). Only writes when a value changed. */
 function sync(){
+ var fb=btn.querySelector('[data-fb]');if(fb)setText(fb,state.wallet?'Disconnect':'Connect Wallet');
  var info=q('#wallet-info');if(!info)return;
  var on=!!state.wallet,d=on?'block':'none';
  if(info.style.display!==d)info.style.display=d;
@@ -615,27 +618,46 @@ function init(){
  if(!window.TON_CONNECT_UI||!TON_CONNECT_UI.TonConnectUI){console.warn('[TON Connect] UI library not loaded');return}
  try{
   var o={manifestUrl:MANIFEST_URL,buttonRootId:'ton-connect-button',uiPreferences:{theme:'DARK'}};
-  if(typeof BOT!=='undefined'&&BOT)o.actionsConfiguration={twaReturnUrl:'https://t.me/'+BOT};
+  o.actionsConfiguration={twaReturnUrl:TWA_RETURN_URL};
   ui=new TON_CONNECT_UI.TonConnectUI(o);
   ui.onStatusChange(onStatus,function(e){console.warn('[TON Connect] status error',e)});
  }catch(e){console.warn('[TON Connect] init failed',e);ui=null}
 }
 
+/* Safety net: if the official button has not rendered after 2s, show a plain Connect button that opens the same modal */
+function armFallback(){
+ setTimeout(function(){
+  if(!ui||btn.children.length)return;
+  var b=document.createElement('button');b.setAttribute('data-fb','1');b.textContent=state.wallet?'Disconnect':'Connect Wallet';
+  b.style.cssText='padding:12px 22px;border-radius:12px;border:0;font-weight:600;color:#021;background:#00ff80;cursor:pointer';
+  b.onclick=function(){try{state.wallet?ui.disconnect():ui.openModal()}catch(e){console.warn('[TON Connect]',e)}};
+  btn.appendChild(b);
+ },2000);
+}
+
+/* Load the UI bundle from jsDelivr if unpkg is blocked/slow */
+function ready(cb){
+ if(window.TON_CONNECT_UI&&TON_CONNECT_UI.TonConnectUI)return cb();
+ var sc=document.createElement('script');
+ sc.src='https://cdn.jsdelivr.net/npm/@tonconnect/ui@2/dist/tonconnect-ui.min.js';
+ sc.onload=cb;sc.onerror=cb;document.head.appendChild(sc);
+}
+
 /* Place the persistent button into the placeholder of the Wallet view whenever it is rendered */
 function mount(){
  var el=q('#ton-connect-button');if(!el)return;
+ if(loading)return;
  if(!ui){if(!el.dataset.err){el.dataset.err='1';el.textContent='Wallet service unavailable — check your connection.'}return}
- if(el!==btn){btn.style.cssText=el.style.cssText;el.replaceWith(btn);
+ if(el!==btn){btn.style.cssText=el.style.cssText;el.replaceWith(btn);armFallback();
   if(state.wallet&&Date.now()-lastFetch>30000)fetchBalance(state.wallet)}
  sync();
 }
 
-init();
 var view=document.getElementById('view');
 if(view)new MutationObserver(function(){
  if(raf)return;raf=requestAnimationFrame(function(){raf=0;mount()});
 }).observe(view,{childList:true,subtree:true});
-mount();
+ready(function(){loading=false;init();mount()});
 })();
 </script>
 </body></html>
